@@ -1,3 +1,5 @@
+Requires Java 8 or above.
+
 Compile at root using "mvn clean install".
 
 Navigate to service folder and run "mvn spring-boot:run" to start service.
