@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<body onload="getAll()">
+<p>
+<label>Person ID: (Only applicable for Create)</label><br>
+<input type="text" id="personId"><br>
+<label>Street: </label><br>
+<input type="text" id="street"><br>
+<label>City: </label><br>
+<input type="text" id="city"><br>
+<label>State: </label><br>
+<input type="text" id="state"><br>
+<label>Postal Code: </label><br>
+<input type="text" id="postalCode"><br>
+<label>Address ID: (Only applicable for Edit\Delete)</label><br>
+<input type="text" id="addressId"><br>
+</p>
+<p>
+<button onclick="addAddress()">Create</button>
+<button onclick="editAddress()">Edit</button>
+<button onclick="deleteById()">Delete</button><br>
+</p>
+<p>
+<button onclick="getAll()">Get All</button>
+<button onclick="countAddress()">Count</button>
+<div id="results"/>
+</p>
+
+<script type="text/javascript">
+function getAll() {
+	var results = document.getElementById("results");
+	results.innerHTML = "";
+	fetch('http://localhost:8080/address')
+    .then(res => res.json())
+    .then(res => {
+        res.map(address => renderAddress(address));
+    });
+}
+
+function renderAddress(address) {
+	var results = document.getElementById("results");
+	var addressLabel = document.createElement("label");
+	addressLabel.innerHTML = address.id + " " + address.street + " " + address.city + " " + address.state + " " + address.postCode;
+	addressLabel.id = address.id;
+	results.appendChild(addressLabel);
+	var br = document.createElement("br");
+	results.appendChild(br);
+}
+
+function addAddress() {
+  var personId = document.getElementById("personId").value;
+  var street = document.getElementById("street").value;
+  var city = document.getElementById("city").value;
+  var state = document.getElementById("state").value;
+  var postalCode = document.getElementById("postalCode").value;
+	const address = {
+			street: street,
+			city: city,
+			state: state,
+			postalCode: postalCode
+		};
+	const options = {
+		method: 'POST',
+		body: JSON.stringify(address),
+		headers: {
+			'Content-Type': 'application/json'
+		}
+	}
+	var url = "http://localhost:8080/address/" + personId.toString();
+    fetch(url, options)
+    .then(res => res.json())
+    .then(address => renderAddress(address));
+}
+
+function editAddress() {
+  var id = document.getElementById("addressId").value;
+  if(id == "") {
+	alert("ID required!");
+	return;
+  }
+  var street = document.getElementById("street").value;
+  var city = document.getElementById("city").value;
+  var state = document.getElementById("state").value;
+  var postalCode = document.getElementById("postalCode").value;
+  const address = {
+			street: street,
+			city: city,
+			state: state,
+			postalCode: postalCode
+		};
+	const options = {
+		method: 'PUT',
+		body: JSON.stringify(address),
+		headers: {
+			'Content-Type': 'application/json'
+		}
+	}
+	document.getElementById(id.toString()).innerHTML = "";
+	var url = "http://localhost:8080/address/" + id.toString();
+    fetch(url, options)
+    .then(res => res.json())
+    .then(address => renderAddress(address));
+}
+
+function deleteById() {
+	var id = document.getElementById("addressId").value;
+	if(id == "") {
+		alert("ID required!");
+		return;
+	}
+	const options = {
+		method: 'DELETE',
+		headers: {
+			'Content-Type': 'application/json'
+		}
+	}
+	var url = "http://localhost:8080/address/" + id.toString();
+    fetch(url, options);
+	document.getElementById(id.toString()).innerHTML = "";
+}
+
+function countAddress() {
+	fetch('http://localhost:8080/address/count')
+    .then(res => res.json())
+    .then(count => renderCount(count));
+}
+
+function renderCount(count) {
+	var results = document.getElementById("results");
+	results.innerHTML = "";
+	var countLabel = document.createElement("label");
+	countLabel.innerHTML = count.toString();
+	results.appendChild(countLabel);
+	var br = document.createElement("br");
+	results.appendChild(br);
+}
+</script>
+</body>
+</html>

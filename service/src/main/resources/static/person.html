@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<body onload="getAll()">
+<p>
+<label>First Name: </label><br>
+<input type="text" id="firstName"><br>
+<label>Second Name: </label><br>
+<input type="text" id="secondName"><br>
+<label>Street: </label><br>
+<input type="text" id="street"><br>
+<label>City: </label><br>
+<input type="text" id="city"><br>
+<label>State: </label><br>
+<input type="text" id="state"><br>
+<label>Postal Code: </label><br>
+<input type="text" id="postalCode"><br>
+<label>ID: (Only applicable for Edit and Delete)</label><br>
+<input type="text" id="personId"><br>
+</p>
+<p>
+<button onclick="addPerson()">Create</button>
+<button onclick="editPerson()">Edit</button>
+<button onclick="deleteById()">Delete</button><br>
+</p>
+<p>
+<button onclick="getAll()">Get All</button>
+<button onclick="countPerson()">Count</button>
+<div id="results"/>
+</p>
+
+<script type="text/javascript">
+function getAll() {
+	var results = document.getElementById("results");
+	results.innerHTML = "";
+	fetch('http://localhost:8080/person')
+    .then(res => res.json())
+    .then(res => {
+        res.map(person => renderPerson(person));
+    });
+}
+
+function renderPerson(person) {
+	var results = document.getElementById("results");
+	var personLabel = document.createElement("label");
+	personLabel.style = "white-space: pre-wrap;";
+	if(person.addresses != null && person.addresses.length != 0) {
+		var labelText = "Person:\n" + person.id + " " + person.firstName + " " + person.secondName + "\n";
+		labelText = labelText.concat("Addresses:\n")
+		person.addresses.map(address => labelText = updateLabel(labelText, address));
+		personLabel.innerHTML = labelText;
+	} else {
+		personLabel.innerHTML = person.id + " " + person.firstName + " " + person.secondName;
+	}
+	personLabel.id = person.id;
+	results.appendChild(personLabel);
+	var br = document.createElement("br");
+	results.appendChild(br);
+}
+
+function updateLabel(labelText, address){
+	return labelText.concat(address.street + " " + address.city + " " + address.state + " " + address.postCode + "\n");
+}
+
+function addPerson() {
+  var firstName = document.getElementById("firstName").value;
+  var secondName = document.getElementById("secondName").value;
+  var street = document.getElementById("street").value;
+  var city = document.getElementById("city").value;
+  var state = document.getElementById("state").value;
+  var postalCode = document.getElementById("postalCode").value;
+  var person = null;
+  if(street == "" && city == "" && state == "" && postalCode == "") {
+	person = {
+		firstName: firstName,
+		secondName: secondName,
+		addresses: []
+	};
+  } else {
+	person = {
+		firstName: firstName,
+		secondName: secondName,
+		addresses: [{
+			street: street,
+			city: city,
+			state: state,
+			postalCode: postalCode
+		}]
+	};
+  }
+	const options = {
+		method: 'POST',
+		body: JSON.stringify(person),
+		headers: {
+			'Content-Type': 'application/json'
+		}
+	}
+	fetch('http://localhost:8080/person', options)
+    .then(res => res.json())
+    .then(person => renderPerson(person));
+}
+
+function editPerson() {
+  var id = document.getElementById("personId").value;
+  if(id == "") {
+	alert("ID required!");
+	return;
+  }
+  var firstName = document.getElementById("firstName").value;
+  var secondName = document.getElementById("secondName").value;
+  var street = document.getElementById("street").value;
+  var city = document.getElementById("city").value;
+  var state = document.getElementById("state").value;
+  var postalCode = document.getElementById("postalCode").value;
+  const person = {
+		firstName: firstName,
+		secondName: secondName,
+		addresses: [{
+			street: street,
+			city: city,
+			state: state,
+			postalCode: postalCode
+		}]
+	};
+	const options = {
+		method: 'PUT',
+		body: JSON.stringify(person),
+		headers: {
+			'Content-Type': 'application/json'
+		}
+	}
+	if(document.getElementById(id.toString()) != null){
+		document.getElementById(id.toString()).innerHTML = "";
+	}
+	var url = "http://localhost:8080/person/" + id.toString();
+    fetch(url, options)
+    .then(res => res.json())
+    .then(person => renderPerson(person));
+}
+
+function deleteById() {
+	var id = document.getElementById("personId").value;
+	if(id == "") {
+	alert("ID required!");
+	return;
+  }
+	const options = {
+		method: 'DELETE',
+		headers: {
+			'Content-Type': 'application/json'
+		}
+	}
+	var url = "http://localhost:8080/person/" + id.toString();
+    fetch(url, options);
+	if(document.getElementById(id.toString()) != null){
+		document.getElementById(id.toString()).innerHTML = "";
+	}
+}
+
+function countPerson() {
+	fetch('http://localhost:8080/person/count')
+    .then(res => res.json())
+    .then(count => renderCount(count));
+}
+
+function renderCount(count) {
+	var results = document.getElementById("results");
+	results.innerHTML = "";
+	var countLabel = document.createElement("label");
+	countLabel.innerHTML = count.toString();
+	results.appendChild(countLabel);
+	var br = document.createElement("br");
+	results.appendChild(br);
+}
+</script>
+
+</body>
+</html>
